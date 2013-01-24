@@ -1,0 +1,81 @@
+#!/bin/sh
+#
+#  p12certinfo -- dumps PEM certificates (not keys) from a P12 file
+#
+#  Copyright (c) 2012 Samuel Lidén Borell <samuel@kodafritt.se>
+#  
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#  
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#  
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#  THE SOFTWARE.
+#
+
+printf "Enter password of P12 file: "
+read PASSWORD -p ''
+
+p12info() {
+    openssl pkcs12 -in "$1" -nomacver -nokeys -password pass:$PASSWORD
+}
+
+extractfirst() {
+    grep -FA 999999 -- "-----BEGIN CERTIFICATE-----" | grep -FB 999999 -- "-----BEGIN CERTIFICATE-----" | grep -FB 999999 -- "-----END CERTIFICATE-----"
+}
+
+extractlast() {
+    grep -FA 999999 -- "-----BEGIN CERTIFICATE-----" | grep -FA 999999 -- "-----END CERTIFICATE-----" | grep -FA 999999 -- "-----BEGIN CERTIFICATE-----"
+}
+
+indent() {
+    sed -r 's/^/    /g'
+}
+
+certinfo() {
+    #openssl x509 -text
+    openssl x509 -serial -md5 -fingerprint -noout -text
+}
+
+
+while true; do
+    case "$1" in
+        -extract-certs)
+            p12info "$2"
+            shift 2
+            continue;;
+        -extract-first)
+            p12info "$2" | extractfirst
+            shift
+            continue;;
+        -extract-last)
+            p12info "$2" | extractlast
+            shift
+            continue;;
+        *)
+            # Show info
+            echo "$1:"
+            echo "END ENTITY"
+            p12info "$1" | extractfirst | certinfo | indent
+
+            echo ""
+            echo "ISSUER"
+            p12info "$1" | extractlast | certinfo | indent
+            
+            echo
+            break;;
+    esac
+    shift
+done
+
+
