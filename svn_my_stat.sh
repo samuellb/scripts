@@ -8,17 +8,29 @@
 # @param $2: End revision
 # @param $3: User
 #
-# Example: svn_my_stat.sh 1000:HEAD jdoe
+# Example: svn_my_stat.sh 1000 HEAD jdoe
+
+if [ -z "$1" ]; then
+    echo "usage: $0  startrev  [endrev]  [username]" >&2
+    echo "" >&2
+    echo "example: $0 2012-10-01 HEAD" >&2
+    echo "example: $0 2012-10-01 HEAD johndoe" >&2
+    exit 1
+fi
+
+startrev=$1
+endrev=${2:-HEAD}
+user=${3:-`whoami`}
 
 svn_changed() {
     svn blame --revision $1:$2 -- $4 | grep -E "^ [0-9]* *${3} "
 }
 
-svn diff --revision $1:$2 --summarize | \
+svn diff --revision $startrev:$endrev --summarize | \
 cut -c9- | \
 while read path; do
-    if [ -n "$(svn_changed $1 $2 $3 $path)" ]; then
-        echo "$3 changed $path"
+    if [ -n "$(svn_changed $1 $endrev $user $path)" ]; then
+        echo "$user changed $path"
     else
         echo "Someone else changed $path"
     fi
