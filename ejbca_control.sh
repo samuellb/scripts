@@ -186,7 +186,7 @@ jbossup() {
 
 findjboss() {
     for pid in `pidof java`; do
-        if grep -qE "org\.jboss\.Main$" /proc/$pid/cmdline; then
+        if grep -qE "org\.jboss\.Main$" /proc/$pid/cmdline 2> /dev/null; then
             echo $pid
             return 0
         fi
@@ -237,7 +237,7 @@ waitup() {
 killjboss() {
     echo "=== killjboss"
     for pid in `pidof java`; do
-        if grep -qE "org\.jboss\.Main$" /proc/$pid/cmdline; then
+        if grep -qE "org\.jboss\.Main$" /proc/$pid/cmdline 2> /dev/null; then
             kill $pid
             sleep 5
             kill -9 $pid
