@@ -176,6 +176,7 @@ jbossrestart() {
     jbossdown
     jbosstempclean
     jbossup
+    waitup
 }
 
 jbossup() {
