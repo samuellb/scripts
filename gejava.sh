@@ -24,20 +24,41 @@
 #
 
 if [ -z "$1" ]; then
-    echo "usage: $0 PATTERN"
+    echo "usage: $0 PATTERN..."
     echo
     echo "Finds Java source files and opens them in gedit."
     exit 1
 fi
 
-IFS=`printf '\n'`
-files=`find -name "$1.java"`
+patterns="$*"
 
-if [ -z "$files" ]; then
-    echo "$0: $1: no matches" >&2
-    exit 1
-else
+oldifs="$IFS"
+#IFS="`printf '\\\0'`"
+#IFS="`printf '\\n'`"
+# FIXME ugly!
+space=""
+error=0
+while [ $# != 0 ]; do
+    addfiles="`find -name "$1.java" | grep -vE '(.svn|src-temp)'`"
+    if [ -n "$addfiles" ]; then
+        files="$files$space$addfiles"
+        space=" "
+    else
+        echo "$0: $1: no matches" >&2
+        error=1
+    fi
+    shift
+done
+#files=`find -name "$1.java" -print0`
+
+#echo "<$files>"
+if [ -n "$files" ]; then
+    #IFS="`printf ' \n\0'`"
+    #IFS="$oldifs"
     gedit $files
     #echo $files
+    exit $error
+else
+    exit 1
 fi
 
