@@ -18,9 +18,13 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-startrev=$1
+startrev='{'$1'}'
 endrev=${2:-HEAD}
 user=${3:-`whoami`}
+
+if [ "x$endrev" != "xHEAD" ]; then
+    endrev='{'$endrev'}'
+fi
 
 svn_changed() {
     svn blame --revision $1:$2 -- $4 | grep -E "^ [0-9]* *${3} "
@@ -29,7 +33,7 @@ svn_changed() {
 svn diff --revision $startrev:$endrev --summarize | \
 cut -c9- | \
 while read path; do
-    if [ -n "$(svn_changed $1 $endrev $user $path)" ]; then
+    if [ -n "$(svn_changed {$1} $endrev $user $path)" ]; then
         echo "$user changed $path"
     else
         echo "Someone else changed $path"
