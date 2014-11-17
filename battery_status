@@ -1,0 +1,24 @@
+#!/bin/sh
+
+charge_now=`cat /sys/class/power_supply/BAT0/charge_now`
+charge_full=`cat /sys/class/power_supply/BAT0/charge_full`
+charge_full_design=`cat /sys/class/power_supply/BAT0/charge_full_design`
+
+voltage_now=`cat /sys/class/power_supply/BAT0/voltage_now`
+voltage_min_design=`cat /sys/class/power_supply/BAT0/voltage_min_design`
+
+
+charge_pct=`echo "$charge_now * 100 / $charge_full" | bc`
+charge_dsg_pct=`echo "$charge_now * 100 / $charge_full_design" | bc`
+charge_full_pct=`echo "$charge_full * 100 / $charge_full_design" | bc`
+
+voltage_now_v=`echo "$voltage_now / 1000000" | bc`
+voltage_min_design_v=`echo "$voltage_min_design / 1000000" | bc`
+
+printf "Battery charge    %2d%%   (%2d%% of original capacity)\n" "$charge_pct" "$charge_dsg_pct"
+printf "Battery max              %2d%%\n" "$charge_full_pct"
+printf "\n"
+printf "Voltage now       %2d\n" "$voltage_now_v"
+printf "Voltage dsg min   %2d\n" "$voltage_min_design_v"
+
+
