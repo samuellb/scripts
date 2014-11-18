@@ -23,6 +23,7 @@
 #  THE SOFTWARE.
 #
 
+ignore_manifest=0
 
 find_in_manifest() {
     createdby=""
@@ -44,16 +45,20 @@ find_in_manifest() {
 }
 
 determine_version() {
-    manifestversion="`unzip -p -- "$1" META-INF/MANIFEST.MF | find_in_manifest`"
-    if [ -n "$manifestversion" ]; then
-        echo "$manifestversion"
-        return
+    [ ! -r "$1" ] && { echo "failed to open file"; return 1; }
+    
+    if [ "$ignore_manifest" = 0 ]; then
+        manifestversion="`unzip -p -- "$1" META-INF/MANIFEST.MF | find_in_manifest`"
+        if [ -n "$manifestversion" ]; then
+            echo "$manifestversion"
+            return 0
+        fi
     fi
     
     someclass="`jar tf "$1" | grep -E '\.class$' | head -n 1`"
     if [ -z "$someclass" ]; then
         echo "empty archive";
-        return
+        return 0
     fi
     
     #unzip -p -- "$1" "$some_class" | head -c 8 | tail -c 2 | hd
@@ -69,15 +74,57 @@ determine_version() {
         0034) echo "1.8";;
         *) echo "unknown java major version $majorversion";;
     esac
+    return 0
+}
+
+parse_opts() {
+    parsing_opts=1
+    ignoremanifest=0
+    error=0
+    while [ $# != 0 ]; do
+        if [ $parsing_opts = 1 ]; then
+            if [ "x$1" = "x--" ]; then
+                parsing_opts=0
+                shift
+                continue
+            elif [ "x$1" = "x--ignore-manifest" ]; then
+                ignoremanifest=1
+                shift
+                continue
+            elif [ "x${1#-}" != "x$1" ]; then
+                echo "$0: unsupported option: $1" >&2
+                error=1
+            fi
+        fi
+        shift
+    done
+    if [ $error = 1 ]; then
+        echo ""
+    else
+        echo "$ignoremanifest"
+    fi
 }
 
 if [ $# = 0 ]; then
-    echo "usage: $0 JARFILES..."
+    echo "usage: $0 [--ignore-manifest] JARFILES..."
     exit 1
 elif [ $# = 1 ]; then
     determine_version "$1"
 else
+    ignore_manifest="`parse_opts "$@"`"
+    parsing_opts=1
+    [ -z "$ignore_manifest" ] && exit 1
     while [ $# != 0 ]; do
+        if [ $parsing_opts = 1 ]; then
+            if [ "x$1" = "x--" ]; then
+                parsing_opts=0
+                shift
+                continue
+            elif [ "x${1#-}" != "x$1" ]; then
+                shift
+                continue
+            fi
+        fi
         printf "%s: " "$1"
         determine_version "$1"
         shift
