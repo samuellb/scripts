@@ -7,14 +7,19 @@
 if [ -z "$1" ]; then
     echo "usage: $0 startrev"
     echo
-    echo "example: $0 2012-08-01"
+    echo "example 1: $0 2012-08-01"
+    echo "example 2: $0 r20394"
     exit
 fi
 
 username=`id -un`
-startrev=$1
+if [ "x${1#r}" = "x$1" ]; then
+    startrev="{$1}"
+else
+    startrev=$1
+fi
 
-svn log -v -r'{'$startrev'}':HEAD |
+svn log -v -r$startrev:HEAD |
  awk '/^r[0-9]+ / {user=$3} /./ {if (user=="'$username'") {print}}' |
  grep -E "^   M|^   G|^   A|^   D|^   C|^   U" |
  awk '{print $2}' |
