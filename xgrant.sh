@@ -1,6 +1,6 @@
 #!/bin/sh -eu
 #
-#  xgrant -- Grants another user untrusted access to your X session
+#  xgrant -- Grants another user trusted or untrusted access to your X session
 #
 #  Copyright (c) 2018 Samuel Lidén Borell <samuel@kodafritt.se>
 #
@@ -23,8 +23,24 @@
 #  THE SOFTWARE.
 #
 
-if [ $# != 1 ]; then
-    echo "usage: xgrant USER" >&2
+trustlevel=untrusted
+if [ $# = 2 ]; then
+    case "$2" in
+    trusted) trustlevel=trusted;;
+    untrusted) trustlevel=untrusted;;
+    *)
+        echo 'trust level must be either "trusted" or "untrusted".'
+        echo "usage: xgrant USER [trusted|untrusted]" >&2
+        exit 2;;
+    esac
+elif [ $# != 1 ]; then
+    cat <<EOF
+usage: xgrant USER [trusted|untrusted]
+
+If not specified, only limited ("untrusted") access will be granted.
+Some applications will not work correctly with untrusted access, or will
+crash with an BadAccess error at certain points.
+EOF
     exit 2
 fi
 
@@ -37,7 +53,7 @@ fi
 
 authtemp="$(tempfile -p temp -s .xgrant)"
 trap 'rm -f "$authtemp"' 0
-xauth -f "$authtemp"  generate "$DISPLAY" MIT-MAGIC-COOKIE-1 untrusted
+xauth -f "$authtemp"  generate "$DISPLAY" MIT-MAGIC-COOKIE-1 "$trustlevel"
 #echo "$authtemp"
 #cat "$authtemp"
 sudo chown -- "$username" "$authtemp"
