@@ -23,31 +23,51 @@
 #  THE SOFTWARE.
 #
 
-if [ $# = 0 ] || [ "$1" = "lock" ]; then
-    state=on
-elif [ "$1" = unlock ]; then
-    state=off
-else
+cmd="${1:-lock}"
+procdevlock() {
+    local procfile=/proc/sys/dev/cdrom/lock
+    if [ -w "$procfile" ]; then
+        echo "$1" > "$procfile"
+    elif type sudo > /dev/null 2>&1 && [ -e /etc/sudoers ]; then
+        sudo su -c "echo '$1' > '$procfile'"
+    else
+        echo "$0: $procfile is not writable. You may have to run the command as root." >&2
+        false
+    fi
+}
+
+case "$cmd" in
+lock)
+    exec eject -i on;;
+unlock)
+    exec eject -i off;;
+hardlock)
+    echo "Locking using /proc filesystem"
+    procdevlock 1;;
+hardunlock)
+    echo "Unlocking using /proc filesystem"
+    procdevlock 0;;
+*)
     cat >&2 <<EOF
-$0: [lock|unlock]
+$0: [lock|unlock|hardlock|hardunlock]
 
 Locks (default) or unlocks the CD/DVD drive (or other ejectable drive).
 
-For this command to work, you might have to configure udev first,
-which can be done with the steps below (step might vary between systems):
+The "lock" and "unlock" commands use the "eject" command internally. For
+this to work, you might have to configure udev first, which can be done
+with the steps below (step might vary between systems):
 
   1. sudo cp /lib/udev/rules.d/60-cdrom_id.rules /etc/udev/rules.d/
   2. edit /etc/udev/rules.d/60-cdrom_id.rules and remove (or comment out)
      DISK_EJECT_REQUEST
   3. save the file. the changes should take effect immediately
 
-See the "eject" command for technical details.
+As an alternative, you may also use the "hardlock" or "hardunlock"
+subcommands, which use the /proc filesystem to lock the drive. This
+typically requires root. cd_lock will attempt to use "sudo" to gain root,
+if available.
 EOF
-    case "$1" in
-    --help|-h) exit;;
-    *) exit 2;;
-    esac
-fi
-
-exec eject -i "$state"
-
+    if [ "$cmd" != --help -a "$cmd" != -h ]; then
+         exit 2
+    fi;;
+esac
