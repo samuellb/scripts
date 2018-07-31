@@ -1,0 +1,81 @@
+#!/bin/sh -u
+#
+#  vcat -- Like "cat", but print filenames before file contents
+#
+#  Copyright (c) 2018 Samuel Lidén Borell <samuel@kodafritt.se>
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#  THE SOFTWARE.
+#
+
+prefix="---- "
+suffix=" ----"
+newlines='\n'
+
+print_help() {
+   cat <<EOF
+usage: $0 [OPTIONS...] FILENAMES...
+
+Prints the contents of the given files similar to "cat", but additionally
+prints the filename of the file being printed first.
+
+Options:
+    --help                  Show this help.
+    -l COUNT                Newlines to print after each file. Default is 1
+    -p, --prefix=STRING     Prefix string before filename. Default is "---- "
+    -s, --suffix=STRING     Suffix string after filename. Default is " ----"
+
+Note: Options must come before filenames. To print filenames starting
+with a "-", delimit the options and filenames with --
+
+EOF
+}
+
+process_opts=1
+while [ $# != 0 ]; do
+    is_option=0
+    if [ $process_opts = 1 ]; then
+        is_option=1
+        case "$1" in
+            --) process_opts=0;;
+            --help) print_help; exit;;
+            --prefix=*) prefix="${1#--prefix=}";;
+            --suffix=*) suffix="${1#--suffix=}";;
+            -p) shift; prefix="$1";;
+            -s) shift; suffix="$1";;
+            -l)
+                shift;
+                count="$1"
+                newlines=''
+                while [ "$count" -gt 0 ]; do
+                    newlines="$newlines\n"
+                    count=$((count - 1))
+                done
+                ;;
+            -*) echo "invalid option: $1"; exit 2;;
+            *)
+                is_option=0;;
+        esac
+    fi
+    if [ $is_option = 0 ]; then
+        printf "%s\n" "$prefix$1$suffix"
+        cat "$1"
+        printf "$newlines"
+    fi
+    shift
+done
