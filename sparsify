@@ -1,0 +1,48 @@
+#!/bin/sh -eu
+#
+#  sparsify -- De-allocate blocks with only null bytes in a file
+#
+#  Copyright (c) 2018 Samuel Lidén Borell <samuel@kodafritt.se>
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#  THE SOFTWARE.
+#
+
+print_help() {
+   cat <<EOF
+usage: $0 FILENAMES...
+
+De-allocate blocks with only null bytes in a file.
+Useful when tools like "fallocate -d" don't work for some reason
+(can happen even on ext4)
+EOF
+}
+
+if [ $# = 0 ] || [ "$1" = --help ]; then
+    print_help
+    [ $# = 1 ]
+    exit
+fi
+
+while [ $# -gt 0 ]; do
+    echo "Processing $1..."
+    tempname="$1.sparsify.tmp"
+    cp -n --preserve=all -P --sparse=always "$1" "$tempname"
+    mv "$tempname" "$1"
+    shift
+done
