@@ -70,6 +70,7 @@ HTTP/1.0 $respcode $statusline$cr
 Content-Type: text/html; charset=UTF-8$cr
 X-Frame-Options: DENY$cr
 X-Content-Type-Options: nosniff$cr
+Content-Security-Policy: default-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'$cr
 $cr
 EOF
 }
