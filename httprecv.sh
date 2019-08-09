@@ -82,6 +82,7 @@ html_head() {
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>$title</title>
 <style type="text/css">
 html, body { background: Window; color: WindowText; font: 90% sans-serif; }
@@ -89,8 +90,22 @@ form { width: 25em; margin: 1em auto; padding: 1.5em; background: #fff; color: #
 h2 { border-bottom: 1px solid #000; }
 h2.err { border: none; text-align: center; margin-top: 2em; }
 h2.err::before { content: "⛔ "; }
-input { padding: 0.5em; width: 100%; }
+input { padding: 0.5em; display: block; width: auto; }
 #st { text-align: center; font-weight: bold; }
+@media(max-width: 35em) {
+  html, body, form { margin: 0; }
+  form { background: transparent; color: inherit; }
+  form, input { display: block; width: auto; }
+  p { margin-bottom: 2em; }
+  h2 { text-align: center; border: none; }
+}
+@media(pointer: coarse) {
+  p { margin-bottom: 2em; }
+  input { padding: 1.5em; }
+}
+@media(max-width: 10cm) {
+  p, div, input { font-size: 100%; font-weight: bold; }
+}
 </style>
 </head>
 <body>
@@ -214,7 +229,10 @@ EOF
 fi
 
 # Handle POST
-if [ "$method" = POST ]; then
+if [ "$method" = POST -a "$content_length" = 0 ]; then
+    uploadstatus='Error: No data sent from browser'
+elif [ "$method" = POST ]; then
+    log INFO "Receiving file data ($content_length bytes)" # header is sanitized, so this is OK
     uploadstatus='Upload failed'
     #if [ -z "$content_length" ]; then
     #    resp_message 411 'Length Required'
