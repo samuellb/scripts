@@ -226,7 +226,7 @@ fi
 if [ "$method" = POST -a "$content_length" = 0 ]; then
     uploadstatus='Error: No data sent from browser'
 elif [ "$method" = POST ]; then
-    log INFO "Receiving file data ($content_length bytes)" # header is sanitized, so this is OK
+    log INFO "Receiving file data ($content_length bytes, including multipart headers)" # header is sanitized, so this is OK
     uploadstatus='Upload failed'
     if [ "$content_type" != multipart/form-data ]; then
         resp_message 415 'Unsupported form encoding'
