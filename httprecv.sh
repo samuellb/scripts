@@ -41,6 +41,7 @@ if [ $# = 0 ]; then
     ip=$(ip route get 93.184.216.34 | grep -oE 'src [^ \t]+' | cut -c '5-' || true)
     urltext="${ip:+, URL is http://$ip:$port/}"
     log INFO "Listening at port $port$urltext"
+    log INFO "Uploaded files will be saved as \"$PWD/upload.bin\""
     while nc.traditional -c "'$0' --internal-recv" -n -l -p "$port"; do
         true
     done
