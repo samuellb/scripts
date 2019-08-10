@@ -234,7 +234,7 @@ elif [ "$method" = POST ]; then
     fi
     uploadstatus='Error: Upload was malformed'
     if [ -n "$content_length" ]; then
-        dd bs=1 count="$content_length" 2>/dev/null
+        head -c "$content_length" 2>/dev/null
     else
         cat
     fi | {
