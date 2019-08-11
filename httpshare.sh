@@ -67,6 +67,7 @@ if [ $1 != --internal-send ]; then
     exit
 fi
 
+log INFO "Client connected"
 cr=$(printf '\r')
 
 resp_header() {
@@ -154,4 +155,6 @@ if [ "$method" = HEAD ]; then
     exit
 fi
 
+log INFO "Sending file \"$filename\""
 cat "$filename"
+log INFO "Successfully sent file."
