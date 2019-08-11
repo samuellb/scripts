@@ -163,7 +163,7 @@ elif [ "${without_head}" != "$reqline" ]; then
     method=HEAD
     url_ver=$without_head
 elif [ "${without_post}" != "$reqline" ]; then
-    # GET request
+    # POST request
     method=POST
     url_ver=$without_post
 else
