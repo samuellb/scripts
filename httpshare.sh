@@ -137,13 +137,14 @@ skip_headers
 
 filename=$2
 filesize=$(stat -c %s "$filename")
+basename=$(basename "$filename")
 
 # FIXME long filenames are not sent in accordance to RFC-2183
 cat <<EOF
 HTTP/1.0 200 Ok$cr
 Content-Type: application/octet-stream; charset=UTF-8$cr
 Content-Length: $filesize$cr
-Content-Disposition: attachment; filename="$filename"$cr
+Content-Disposition: attachment; filename="$basename"$cr
 X-Frame-Options: DENY$cr
 X-Content-Type-Options: nosniff$cr
 $cr
