@@ -23,28 +23,47 @@
 #  THE SOFTWARE.
 #
 
-trustlevel=untrusted
-if [ $# = 2 ]; then
-    case "$2" in
-    trusted) trustlevel=trusted;;
-    untrusted) trustlevel=untrusted;;
-    *)
-        echo 'trust level must be either "trusted" or "untrusted".'
-        echo "usage: xgrant USER [trusted|untrusted]" >&2
-        exit 2;;
-    esac
-elif [ $# != 1 ]; then
+show_usage() {
+    echo "usage: xgrant USER [trusted|untrusted] [timeout SECS]" >&2
+}
+
+show_help() {
     cat <<EOF
-usage: xgrant USER [trusted|untrusted]
+usage: xgrant USER [trusted|untrusted] [timeout SECS]
 
 If not specified, only limited ("untrusted") access will be granted.
 Some applications will not work correctly with untrusted access, or will
 crash with an BadAccess error at certain points.
+
+The timeout defaults to 60 seconds.
+
 EOF
+}
+
+trustlevel=untrusted
+timeout=60
+if [ $# = 0 ]; then
+    show_help
     exit 2
 fi
 
 username="$1"
+shift
+while [ $# -ge 1 ]; do
+    case "$1" in
+    trusted) trustlevel=trusted;;
+    untrusted) trustlevel=untrusted;;
+    timeout)
+        shift
+        timeout="$1";;
+    *)
+        echo "invalid parameter: $1"
+        show_usage
+        exit 2;;
+    esac
+    shift
+done
+
 userhome="$(getent passwd "$username" | cut -d : -f 6)"
 if [ -z "$userhome" ]; then
     echo "$username: user not found" >&2
@@ -53,7 +72,7 @@ fi
 
 authtemp="$(tempfile -p temp -s .xgrant)"
 trap 'rm -f "$authtemp"' 0
-xauth -f "$authtemp"  generate "$DISPLAY" MIT-MAGIC-COOKIE-1 "$trustlevel"
+xauth -f "$authtemp"  generate "$DISPLAY" MIT-MAGIC-COOKIE-1 "$trustlevel" timeout "$timeout"
 #echo "$authtemp"
 #cat "$authtemp"
 sudo chown -- "$username" "$authtemp"
