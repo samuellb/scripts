@@ -57,11 +57,9 @@ set_taskbar_monitor() {
 }
 
 
-internal_monitor=$(find_internal_monitor) ||
-    error 3 "Could not detect any monitors."
-
 case "$mode" in
 left|right)
+    internal_monitor=$(find_internal_monitor) || error 3 "Could not detect any monitors."
     external_monitors=$(list_external_monitors) || error 4 "Could not detect any external monitors."
     primary=--primary
     farthest=$internal_monitor
@@ -81,9 +79,10 @@ left|right)
     fi
     ;;
 off)
-    xrandr --output "$internal_monitor" --primary
+    internal_monitor=$(find_internal_monitor) || error 3 "Could not detect any monitors."
+    external_monitors=$(list_external_monitors) || error 4 "Could not detect any external monitors."
     args=''
-    list_external_monitors | while read output; do
+    for output in $external_monitors; do
         echo "found external output: $output"
         args="$args --output $output --off"
     done
