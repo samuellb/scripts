@@ -1,0 +1,114 @@
+#!/bin/sh -eu
+#
+#  extscreen - Switches an external monitor on or off, and switches the primary monitor
+#
+#  Copyright (c) 2020 Samuel Lidén Borell <samuel@kodafritt.se>
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#  THE SOFTWARE.
+#
+
+mode=${1:-help}
+IFS=' '
+
+error() {
+    printf '%s\n' "$2" >&2
+    exit "$1"
+}
+
+list_monitors() {
+    xrandr | grep -E '^[^ ]+ connected' | cut -f 1 -d ' '
+}
+
+# Uses an heuristic to find the internal monitor. Looks for LVDS, then eDP*.
+# If neither is found, we use the first connected monitor.
+find_internal_monitor() {
+    {
+        list_monitors | grep -E "^LVDS" || list_monitors | grep -E "^eDP" || list_monitors
+    } | head -n 1
+}
+
+# Lists external monitors
+list_external_monitors() {
+    xrandr | grep -E '^[^ ]+ connected' | cut -f 1 -d ' ' | grep -vxF "$internal_monitor"
+}
+
+set_taskbar_monitor() {
+    if [ -w ~/.config/lxpanel/LXDE/panels/panel ]; then
+        sed -i -r 's/  monitor=[0-9]+/  monitor='"$1"'/' ~/.config/lxpanel/LXDE/panels/panel
+        killall lxpanel || true
+        lxpanel --profile LXDE > /dev/null 2>&1 &
+    fi
+}
+
+
+internal_monitor=$(find_internal_monitor) ||
+    error 3 "Could not detect any monitors."
+
+case "$mode" in
+left|right)
+    external_monitors=$(list_external_monitors) || error 4 "Could not detect any external monitors."
+    primary=--primary
+    farthest=$internal_monitor
+    args=''
+    for output in $external_monitors; do
+        echo "Found external output: $output${primary:+, making primary}"
+        args="$args --output $output --auto --$mode-of $farthest $primary"
+        primary=''
+        farthest=$output
+    done
+    xrandr $args
+    # FIXME internal monitor could in theory come after
+    if [ "$mode" = left ]; then
+        set_taskbar_monitor 0
+    else
+        set_taskbar_monitor 1
+    fi
+    ;;
+off)
+    xrandr --output "$internal_monitor" --primary
+    args=''
+    list_external_monitors | while read output; do
+        echo "found external output: $output"
+        args="$args --output $output --off"
+    done
+    xrandr --output "$internal_monitor" --primary $args
+    set_taskbar_monitor 0
+    ;;
+help|--help)
+    cat <<EOF
+usage: extscreen left|right|off|help
+
+Switches one or more external monitors on or off, and switches the primary
+monitor.
+
+Modes:
+  left   Switches external monitors on. The first one listed is made
+         primary, and the monitors are placed left of the current screen.
+         The LXDE panel configuration, if present, is updated and lxpanel
+         is restarted. It will only update the panel called "panel", which
+         the default panel is called. Additional panels will not be upated.
+  right  Like "left", but puts the external monitors to the right.
+  off    Switches external monitors
+  help  Shows this help text.
+
+EOF
+    ;;
+*)
+    error 2 "invalid mode: $mode";;
+esac
