@@ -48,7 +48,7 @@ EOF
     exit
 fi
 
-if [ $1 != --internal-send ]; then
+if [ "$1" != --internal-send ]; then
     if [ "$1" = -- ]; then
         shift
     fi
@@ -102,13 +102,13 @@ EOF
 }
 
 skip_headers() {
-    while read line; do
+    while read -r line; do
         line=${line%$cr}
         [ -n "$line" ] || break
     done
 }
 
-read reqline
+read -r reqline
 without_get=${reqline#GET }
 without_get=${without_get#get }
 without_head=${reqline#HEAD }
@@ -137,10 +137,11 @@ fi
 skip_headers
 
 filename=$2
-filesize=$(stat -c %s "$filename")
-basename=$(basename "$filename")
+filesize=$(stat -c %s -- "$filename")
+basename=$(basename -- "$filename")
 
 # FIXME long filenames are not sent in accordance to RFC-2183
+# FIXME escape the filename
 cat <<EOF
 HTTP/1.0 200 Ok$cr
 Content-Type: application/octet-stream; charset=UTF-8$cr
@@ -156,5 +157,5 @@ if [ "$method" = HEAD ]; then
 fi
 
 log INFO "Sending file \"$filename\""
-cat "$filename"
+cat -- "$filename"
 log INFO "Successfully sent file."

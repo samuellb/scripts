@@ -9,14 +9,14 @@ if [ $# = 1 ]; then
     if [ -r "$1" ]; then
         if [ ! -w "$1" ]; then
             msg "WARNING!!! File is not writeable: $1"
-            read REPLY
+            read -r REPLY
         fi
     else
         # It's a new file, check if the containing directory is writable
         dir="$(dirname "$1")"
         if [ ! -w "$dir" ]; then
             msg "WARNING!!! Can't write in directory: $dir"
-            read REPLY
+            read -r REPLY
         fi
     fi
 fi

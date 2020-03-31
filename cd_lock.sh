@@ -25,7 +25,7 @@
 
 cmd="${1:-lock}"
 procdevlock() {
-    local procfile=/proc/sys/dev/cdrom/lock
+    procfile=/proc/sys/dev/cdrom/lock
     if [ -w "$procfile" ]; then
         echo "$1" > "$procfile"
     elif type sudo > /dev/null 2>&1 && [ -e /etc/sudoers ]; then
@@ -67,7 +67,7 @@ subcommands, which use the /proc filesystem to lock the drive. This
 typically requires root. cd_lock will attempt to use "sudo" to gain root,
 if available.
 EOF
-    if [ "$cmd" != --help -a "$cmd" != -h ]; then
+    if [ "$cmd" != --help ] && [ "$cmd" != -h ]; then
          exit 2
     fi;;
 esac

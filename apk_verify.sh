@@ -66,7 +66,7 @@ if [ "$auto" = 0 ]; then
     trusted_key=$(echo "$trusted_key" | tr '[:upper:]' '[:lower:]')
     cleaned=$(echo "$trusted_key" | tr -cd 0123456789abcdef)
     len=$(printf %s "$trusted_key" | wc -c)
-    if [ "$trusted_key" != "$cleaned" -o "$len" != 64 ]; then
+    if [ "$trusted_key" != "$cleaned" ] || [ "$len" != 64 ]; then
         echo "Invalid public key SHA-256: $trusted_key"
         exit 2
     fi
@@ -111,7 +111,7 @@ while [ $# -ge 1 ]; do
         ok=0
     }
     unsigned=$(jarsigner -verify -certs -verbose "$1" | grep -E '^[a-z0-9 ]{10,10}[0-9]' | grep -vE '^sm ' | cut -c '-3,42-' |
-        grep -vE "^(s   META-INF/MANIFEST\.MF|    META-INF/$namebase\.($sigalg|SF))\$" | wc -l)
+        grep -cvE "^(s   META-INF/MANIFEST\\.MF|    META-INF/$namebase\\.($sigalg|SF))\$" || true)
     if [ "$unsigned" != 0 ]; then
         failure "$1" "There are $unsigned unsigned files:"
         list_unsigned "$namebase" "$sigalg" "$1" >&2

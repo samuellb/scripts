@@ -35,9 +35,9 @@ block() {
 
 exts="application art cdf chm cpl dib dll fif gif hlp hqx hta htc htm inf ini its jfif jpe js jse lnk mhtml mht msp png prf rat rtf sct shtml txt url wab vbe vbs vcf wri wsc wsf wsh xaml xbap xht xif xml"
 for ext in $exts; do
-    block ~/.local/share/mime/packages/x-wine-extension-$ext.xml
-    block ~/.local/share/mime/application/x-wine-extension-$ext.xml
-    block ~/.local/share/applications/wine-extension-$ext.desktop
+    block ~/.local/share/mime/packages/x-wine-extension-"$ext".xml
+    block ~/.local/share/mime/application/x-wine-extension-"$ext".xml
+    block ~/.local/share/applications/wine-extension-"$ext".desktop
 done
 
 

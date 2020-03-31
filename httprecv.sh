@@ -46,7 +46,7 @@ if [ $# = 0 ]; then
         true
     done
     exit
-elif [ $# != 1 -o $1 != --internal-recv ]; then
+elif [ $# != 1 ] || [ "$1" != --internal-recv ]; then
     cat <<EOF
 usage: $0
 
@@ -57,7 +57,7 @@ Note: This script is intended for transferring files over a firewalled
 network (or a secure point-to-point network link). It does not offer any
 security at all, and it does not handle multiple users well.
 EOF
-    [ $1 = --help ]
+    [ "$1" = --help ]
     exit
 fi
 
@@ -130,7 +130,7 @@ resp_message() {
 }
 
 skip_headers() {
-    while read line; do
+    while read -r line; do
         line=${line%$cr}
         [ -n "$line" ] || break
     done
@@ -138,7 +138,7 @@ skip_headers() {
 
 read_multipart_boundary() {
     boundary="$1"
-    read line
+    read -r line
     line="${line%$cr}"
     if [ "$line" != "--$boundary" ]; then
         resp_message 400 "Bad request"
@@ -147,7 +147,7 @@ read_multipart_boundary() {
     fi
 }
 
-read reqline
+read -r reqline
 without_get=${reqline#GET }
 without_get=${without_get#get }
 without_head=${reqline#HEAD }
@@ -182,13 +182,13 @@ fi
 content_type=""
 content_type_boundary=""
 content_length=""
-while read hdr; do
+while read -r hdr; do
     hdr="${hdr%$cr}"
     [ -n "$hdr" ] || break
     hdrlower=$(printf %s "$hdr" | tr '[:upper:]' '[:lower:]')
-    hdrname=$(printf %s "$hdrlower" | cut -d ':' -f 1 | tr -s " \t")
+    hdrname=$(printf %s "$hdrlower" | cut -d ':' -f 1 | tr -s ' \t')
     hdrname=${hdrname% }
-    hdrvalue=$(printf %s "$hdr" | cut -d ':' -f 2- | tr -s " \t")
+    hdrvalue=$(printf %s "$hdr" | cut -d ':' -f 2- | tr -s ' \t')
     hdrvalue=${hdrvalue# }
     case "$hdrname" in
         content-length)
@@ -224,7 +224,7 @@ EOF
 fi
 
 # Handle POST
-if [ "$method" = POST -a "$content_length" = 0 ]; then
+if [ "$method" = POST ] && [ "$content_length" = 0 ]; then
     uploadstatus='Error: No data sent from browser'
 elif [ "$method" = POST ]; then
     log INFO "Receiving file data ($content_length bytes, including multipart headers)" # header is sanitized, so this is OK
@@ -241,13 +241,13 @@ elif [ "$method" = POST ]; then
     fi | {
         read_multipart_boundary "$content_type_boundary"
         part_length=""
-        while read line; do
+        while read -r line; do
             line="${line%$cr}"
             [ -n "$line" ] || break
             hdrlower=$(printf %s "$hdr" | tr '[:upper:]' '[:lower:]')
-            hdrname=$(printf %s "$hdrlower" | cut -d ':' -f 1 | tr -s " \t")
+            hdrname=$(printf %s "$hdrlower" | cut -d ':' -f 1 | tr -s ' \t')
             hdrname=${hdrname% }
-            hdrvalue=$(printf %s "$hdr" | cut -d ':' -f 2- | tr -s " \t")
+            hdrvalue=$(printf %s "$hdr" | cut -d ':' -f 2- | tr -s ' \t')
             hdrvalue=${hdrvalue# }
             case "$hdrname" in
                 content-length)

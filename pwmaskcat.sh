@@ -30,14 +30,14 @@ any='[[:graph:]]'
 alt1="$any*[a-z]$any*[A-Z]$any*"
 alt2="$any*[A-Z]$any*[0-9]$any*"
 alt3="$any*[0-9]$any*[a-z]$any*"
-alt3="$any*[\x21-\x40]$any*[a-z]$any*"
+alt3="$any*[\\x21-\\x40]$any*[a-z]$any*"
 match="($alt1|$alt2|$alt3)"
 # black (makes it impossible to see what you have selected)
-#replacement="$esc[30;40m\1$esc[0m"
+#replacement="${esc}[30;40m\1$esc[0m"
 # light gray on gray, with blink + underscore
-replacement="$esc[37;47;1;4;5m\1$esc[0m"
+replacement="${esc}[37;47;1;4;5m\\1${esc}[0m"
 #
-#replacement="$esc[37;1m\1$esc[0m"
+#replacement="${esc}[37;1m\\1${esc}[0m"
 
 regex="s/$match/$replacement/g"
 #echo "$regex"

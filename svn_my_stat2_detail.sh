@@ -11,8 +11,8 @@ if [ -z "$1" ]; then
     exit
 fi
 
-username=`id -un`
+username=$(id -un)
 startrev=$1
 
-svn log -v -r'{'$startrev'}':HEAD | awk '/^r[0-9]+ / {user=$3} /./ {if (user=="'$username'") {print}}'
+svn log -v -r"{$startrev}":HEAD | awk --sandbox '/^r[0-9]+ / {user=$3} /./ {if (user=="'"$username"'") {print}}'
 

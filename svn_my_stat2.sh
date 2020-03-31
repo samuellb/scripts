@@ -12,16 +12,16 @@ if [ -z "$1" ]; then
     exit
 fi
 
-username=`id -un`
+username=$(id -un)
 if [ "x${1#r}" = "x$1" ]; then
     startrev="{$1}"
 else
     startrev=$1
 fi
 
-svn log -v -r$startrev:HEAD |
- awk '/^r[0-9]+ / {user=$3} /./ {if (user=="'$username'") {print}}' |
+svn log -v -r"$startrev":HEAD |
+ awk --sandbox '/^r[0-9]+ / {user=$3} /./ {if (user=="'"$username"'") {print}}' |
  grep -E "^   M|^   G|^   A|^   D|^   C|^   U" |
- awk '{print $2}' |
+ awk --sandbox '{print $2}' |
  sort | uniq
 

@@ -70,7 +70,7 @@ if [ -z "$userhome" ]; then
     exit 1
 fi
 
-authtemp="$(tempfile -p temp -s .xgrant)"
+authtemp="$(mktemp tmp.XXXXXXXXXX.xgrant --tmpdir)"
 trap 'rm -f "$authtemp"' 0
 xauth -f "$authtemp"  generate "$DISPLAY" MIT-MAGIC-COOKIE-1 "$trustlevel" timeout "$timeout"
 #echo "$authtemp"
