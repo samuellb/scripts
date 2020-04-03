@@ -24,7 +24,7 @@
 #
 
 mode=${1:-help}
-IFS=' '
+export LC_ALL=en_US.UTF-8
 
 error() {
     printf '%s\n' "$2" >&2
@@ -44,8 +44,13 @@ find_internal_monitor() {
 }
 
 # Lists external monitors
-list_external_monitors() {
+list_connected_external_monitors() {
     xrandr | grep -E '^[^ ]+ connected' | cut -f 1 -d ' ' | grep -vxF "$internal_monitor"
+}
+
+# Lists external monitors, even disconnecteed
+list_all_external_monitors() {
+    xrandr | grep -E '^[^ ]+' | cut -f 1 -d ' ' | grep -vxF "$internal_monitor" | grep -vxF 'Screen'
 }
 
 set_taskbar_monitor() {
@@ -60,7 +65,7 @@ set_taskbar_monitor() {
 case "$mode" in
 left|right)
     internal_monitor=$(find_internal_monitor) || error 3 "Could not detect any monitors."
-    external_monitors=$(list_external_monitors) || error 4 "Could not detect any external monitors."
+    external_monitors=$(list_connected_external_monitors) || error 4 "Could not detect any external monitors."
     primary=--primary
     farthest=$internal_monitor
     args=''
@@ -80,7 +85,7 @@ left|right)
     ;;
 off)
     internal_monitor=$(find_internal_monitor) || error 3 "Could not detect any monitors."
-    external_monitors=$(list_external_monitors) || error 4 "Could not detect any external monitors."
+    external_monitors=$(list_all_external_monitors) || error 4 "Could not detect any external monitors."
     args=''
     for output in $external_monitors; do
         echo "found external output: $output"
