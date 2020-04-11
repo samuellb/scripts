@@ -27,8 +27,14 @@
 
 base_blacklist="--blacklist=/srv --blacklist=/run/acpid.pid --blacklist=/run/acpid.socket --blacklist=/run/alsa --blacklist=/run/avahi-daemon --blacklist=/run/blkid --blacklist=/run/boltd --blacklist=/run/charon.ctl --blacklist=/run/charon.pid --blacklist=/run/console-setup --blacklist=/run/crond.pid --blacklist=/run/crond.reboot --blacklist=/run/cryptsetup --blacklist=/run/dbus --blacklist=/run/dhclient-wlp2s0.pid --blacklist=/run/dmeventd-client --blacklist=/run/dmeventd-server --blacklist=/run/docker.pid --blacklist=/run/docker.sock --blacklist=/run/ebtables.lock --blacklist=/run/fsck --blacklist=/run/gdm3 --blacklist=/run/gdm3.pid --blacklist=/run/initctl --blacklist=/run/initramfs --blacklist=/run/laptop-mode-tools --blacklist=/run/libvirt --blacklist=/run/libvirtd.pid --blacklist=/run/lock --blacklist=/run/log --blacklist=/run/lvmg --blacklist=/run/lvmetad.pid --blacklist=/run/lxc --blacklist=/run/mlocate.daily.lock --blacklist=/run/mysqld  --blacklist=/run/network --blacklist=/run/NetworkManager --blacklist=/run/openvpn --blacklist=/run/openvpn-client --blacklist=/run/openvpn-server --blacklist=/run/plymouth --blacklist=/run/pppconfig --blacklist=/run/rsyslogd.pid --blacklist=/run/sendsigs.omit.d --blacklist=/run/snapd-snap.socket --blacklist=/run/snapd.socket --blacklist=/run/spice-vdagentd --blacklist=/run/starter.charon.pid --blacklist=/run/sudo  --blacklist=/run/systemd --blacklist=/run/thermald --blacklist=/run/tmpfiles.d --blacklist=/run/ubuntu-fan --blacklist=/run/udev --blacklist=/run/udisks2 --blacklist=/run/unattended-upgrades.lock --blacklist=/run/user/120 --blacklist=/run/utmp  --blacklist=/run/uuidd --blacklist=/run/virtlogd.pid --blacklist=/run/wpa_supplicant --blacklist=/run/xl2tpd --blacklist=/run/xl2tpd.pid --blacklist=/run/xtables.sock --blacklist=/etc/passwd- --blacklist=/etc/group- --blacklist=/etc/apparmor.d --blacklist=/etc/subuid --blacklist=/etc/subgid --blacklist=/var/cache/debconf --blacklist=/run/cups --blacklist=/run/user/1000"
 
+netopts="--net=none"
+if [ "$1" = "--net" ]; then
+    netopts="--net=lxcbr0"
+    shift
+fi
+
 exec firejail --noprofile --quiet --caps.drop=all --disable-mnt \
-    --hostname=restricted --ipc-namespace --machine-id --net=none --nice=2 \
+    --hostname=restricted --ipc-namespace --machine-id $netopts --nice=2 \
     --no3d --nodbus --nodvd --nogroups --noroot --nonewprivs --nosound \
     --noautopulse --notv --nou2f --novideo --private --private-dev \
     $base_blacklist --private-tmp --shell=/bin/sh --x11=none -- "$@" \
