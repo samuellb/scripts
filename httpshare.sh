@@ -137,7 +137,7 @@ fi
 skip_headers
 
 filename=$2
-filesize=$(stat -c %s -- "$filename")
+filesize=$(stat -Lc %s -- "$filename")
 basename=$(basename -- "$filename")
 
 # FIXME long filenames are not sent in accordance to RFC-2183
