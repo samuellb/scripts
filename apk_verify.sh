@@ -85,7 +85,8 @@ success() {
     echo "$1: ${green}VALID SIGNATURE${normal}"
 }
 list_unsigned() {
-    jarsigner -verify -certs -verbose "$1" | grep -E '^[a-z0-9 ]{10,10}[0-9]' | grep -vE '^sm ' | cut -c '-3,42-'
+    jarsigner -verify -certs -verbose "$3" | grep -E '^[a-z0-9 ]{10,10}[0-9]' | grep -vE '^sm ' | cut -c '-3,42-' |
+        grep -vE "^(s +META-INF/MANIFEST\\.MF| +META-INF/$namebase\\.($sigalg|SF))\$"
 }
 
 while [ $# -ge 1 ]; do
@@ -111,7 +112,7 @@ while [ $# -ge 1 ]; do
         ok=0
     }
     unsigned=$(jarsigner -verify -certs -verbose "$1" | grep -E '^[a-z0-9 ]{10,10}[0-9]' | grep -vE '^sm ' | cut -c '-3,42-' |
-        grep -cvE "^(s   META-INF/MANIFEST\\.MF|    META-INF/$namebase\\.($sigalg|SF))\$" || true)
+        grep -cvE "^(s +META-INF/MANIFEST\\.MF| +META-INF/$namebase\\.($sigalg|SF))\$" || true)
     if [ "$unsigned" != 0 ]; then
         failure "$1" "There are $unsigned unsigned files:"
         list_unsigned "$namebase" "$sigalg" "$1" >&2
