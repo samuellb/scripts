@@ -24,7 +24,6 @@
 #
 
 mode=${1:-help}
-export LC_ALL=en_US.UTF-8
 
 error() {
     printf '%s\n' "$2" >&2
