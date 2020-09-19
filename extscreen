@@ -56,7 +56,7 @@ set_taskbar_monitor() {
     if [ -w ~/.config/lxpanel/LXDE/panels/panel ]; then
         sed -i -r 's/  monitor=[0-9]+/  monitor='"$1"'/' ~/.config/lxpanel/LXDE/panels/panel
         killall lxpanel || true
-        lxpanel --profile LXDE > /dev/null 2>&1 &
+        (cd; exec lxpanel --profile LXDE > /dev/null 2>&1; ) &
     fi
 }
 
