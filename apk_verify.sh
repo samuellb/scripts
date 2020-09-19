@@ -97,6 +97,11 @@ while [ $# -ge 1 ]; do
         com.bankid.bus.*)
             trusted_key=ada2624b35fca3cc340e11899454e550fba982b44d82b97efd16aa3a7a467c16
             certname=BID_ANDR.RSA;;
+        Signal.website.*)
+            # trusted cert is 29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26
+            # FIXME variable is mis-named
+            trusted_key=29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26
+            certname=SIGNAL_S.RSA;;
         *)
             failure "$1" "unknown APK name. cannot auto-detect key"
             any_failure=1
@@ -118,7 +123,7 @@ while [ $# -ge 1 ]; do
         list_unsigned "$namebase" "$sigalg" "$1" >&2
         ok=0
     fi
-    shasum=$(unzip -Up "$1" META-INF/BID_ANDR.RSA | openssl pkcs7 -inform der -print_certs | openssl x509 -outform der | sha256sum | cut -d' ' -f 1)
+    shasum=$(unzip -Up "$1" "META-INF/$certname" | openssl pkcs7 -inform der -print_certs | openssl x509 -outform der | sha256sum | cut -d' ' -f 1)
     if [ "$shasum" = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ]; then
         failure "$1" "Could not find public key"
         ok=0
