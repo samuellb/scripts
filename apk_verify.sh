@@ -25,15 +25,14 @@
 
 if [ $# = 0 ] || [ "$1" = --help ]; then
     cat <<EOF
-usage: $0 <sha256> <apk file>...
+usage: $0 --manual <sha256> <apk file>...
        $0 --certname <name> <sha256> <apk file>...
        $0 --auto <apk file>...
 
 Checks the public key and signature in APK files.
 
-The first argument must be the SHA-256 of the public key, unless
---auto is given. The following arguments are the APK files to
-verify.
+With --manual, the first argument must be the SHA-256 of the public key
+The following arguments are the APK files to verify.
 
 With --certname, you can override the filename base for the certificate
 file. If not specified, this will default to CERT.RSA.
@@ -49,25 +48,29 @@ fi
 # TODO rewrite using getopt?
 auto=0
 certname=CERT.RSA
-trusted_key=
+trusted_sha256=
 if [ "$1" = --certname ]; then
     certname="$2"
-    trusted_key="$3"
+    trusted_sha256="$3"
     shift 3
 elif [ "$1" = --auto ]; then
     auto=1
     shift
-else
-    trusted_key="$1"
+elif [ "$1" = --manual ]; then
+    trusted_sha256="$1"
     shift
+else
+    echo "Invalid option: $1" >&2
+    echo "Should be one of --manual, --certname or --auto" >&2
+    exit 2
 fi
 
 if [ "$auto" = 0 ]; then
-    trusted_key=$(echo "$trusted_key" | tr '[:upper:]' '[:lower:]')
-    cleaned=$(echo "$trusted_key" | tr -cd 0123456789abcdef)
-    len=$(printf %s "$trusted_key" | wc -c)
-    if [ "$trusted_key" != "$cleaned" ] || [ "$len" != 64 ]; then
-        echo "Invalid public key SHA-256: $trusted_key"
+    trusted_sha256=$(echo "$trusted_sha256" | tr '[:upper:]' '[:lower:]')
+    cleaned=$(echo "$trusted_sha256" | tr -cd 0123456789abcdef)
+    len=$(printf %s "$trusted_sha256" | wc -c)
+    if [ "$trusted_sha256" != "$cleaned" ] || [ "$len" != 64 ]; then
+        echo "Invalid public key SHA-256: $trusted_sha256"
         exit 2
     fi
 fi
@@ -95,12 +98,19 @@ while [ $# -ge 1 ]; do
     if [ "$auto" = 1 ]; then
         case "$(basename "$1" | tr _- ..)" in
         com.bankid.bus.*)
-            trusted_key=ada2624b35fca3cc340e11899454e550fba982b44d82b97efd16aa3a7a467c16
+            # BankID - Swedish eID system
+            trusted_sha256=ada2624b35fca3cc340e11899454e550fba982b44d82b97efd16aa3a7a467c16
             certname=BID_ANDR.RSA;;
+        se.bankgirot.swish.*)
+            trusted_sha256=d31d1d5b73dec8cf45a51114d126dfe60cf264e208826c2ce413c4717c022566
+            certname=CERT.RSA;;
+        se.slso.app4us.*)
+            # Alltid Öppet - Swedish health care and covid19 vaccine booking app
+            trusted_sha256=873c14fc8f5a1000d89dee5708c1992014b2c1218eb9c060e68645ca9047d064
+            certname=APP4US.RSA;;
         Signal.website.*)
             # trusted cert is 29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26
-            # FIXME variable is mis-named
-            trusted_key=29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26
+            trusted_sha256=29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26
             certname=SIGNAL_S.RSA;;
         *)
             failure "$1" "unknown APK name. cannot auto-detect key"
@@ -123,11 +133,11 @@ while [ $# -ge 1 ]; do
         list_unsigned "$namebase" "$sigalg" "$1" >&2
         ok=0
     fi
-    shasum=$(unzip -Up "$1" "META-INF/$certname" | openssl pkcs7 -inform der -print_certs | openssl x509 -outform der | sha256sum | cut -d' ' -f 1)
-    if [ "$shasum" = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ]; then
+    shasum=$(unzip -p "$1" "META-INF/$certname" | openssl pkcs7 -inform der -print_certs | openssl x509 -outform der | sha256sum | cut -d' ' -f 1)
+    if [ "$shasum" = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ]; then  # sha256 of empty string
         failure "$1" "Could not find public key"
         ok=0
-    elif [ "$shasum" != "$trusted_key" ]; then
+    elif [ "$shasum" != "$trusted_sha256" ]; then
         failure "$1" "Untrusted public key hash: $shasum"
         ok=0
     fi
