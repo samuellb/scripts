@@ -29,8 +29,13 @@ pids=$(pgrep --uid "$user" pulseaudio || true
        pgrep --uid "$user" 'Web Content' || true
        pgrep --uid "$user" firefox-bin || true
        pgrep --uid "$user" 'Privileged Con' || true
+       pgrep --uid "$user" chromium || true
+       pgrep --uid "$user" zoom || true
+       pgrep Xorg || true
       )
 echo "Re-nicing $pids"
-sudo renice -n -2 -p $pids
-sudo ionice -c 2 -n 0 -p $pids
+sudo renice -n -5 -p $pids
+sudo renice -n -2 -p $(pgrep Xorg)
+#sudo ionice -c 2 -n 0 -p $pids
+sudo ionice -c 1 -n 0 -p $pids
 echo "Done."
