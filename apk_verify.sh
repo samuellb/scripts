@@ -126,7 +126,9 @@ while [ $# -ge 1 ]; do
         failure "$1" "jarsigner command failed"
         ok=0
     }
-    unsigned=$(jarsigner -verify -certs -verbose -sigfile "$namebase" -sigalg "$sigalg" "$1" | grep -E '^[a-z0-9 ]{10,10}[0-9]' | grep -vE '^sm ' | cut -c '-3,42-' |
+    # Time zone can be 3 or 4 letters. If it is 3 letters, then a leading space will be included
+    # Also, the formatting can change between versions of jarsigner
+    unsigned=$(jarsigner -verify -certs -verbose -sigfile "$namebase" -sigalg "$sigalg" "$1" | grep -E '^[a-z0-9 ]{10,10}[0-9]' | grep -vE '^sm ' | cut -c '-3,43-' |
         grep -cvE "^(s +META-INF/MANIFEST\\.MF| +META-INF/$namebase\\.($sigalg|SF))\$" || true)
     if [ "$unsigned" != 0 ]; then
         failure "$1" "There are $unsigned unsigned files:"
