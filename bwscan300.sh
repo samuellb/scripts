@@ -35,4 +35,4 @@ scanimage --resolution 300 -x 210 -y 297 --calibration-cache=yes --mode Gray > "
 convert "$tmpscan" -gamma '0.8' -white-threshold '80%' -black-threshold '65%' "$tmpconv"
 unpaper --overwrite "$tmpconv" "$tmpunp"
 gpicview "$tmpunp" >/dev/null 2>&1 &
-convert "$tmpunp" "$1"
+convert -density 300 "$tmpunp" "$1"
