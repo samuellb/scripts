@@ -32,7 +32,8 @@ tmpunp=$(mktemp tmp3unp-XXXXXXXX.pnm)
 
 #scanimage --resolution 300 -x 210 -y 297 --calibration-cache=yes > "$tmpscan"
 scanimage --resolution 300 -x 210 -y 305 --brightness -30 --contrast 30 --calibration-cache=yes > "$tmpscan"
-convert "$tmpscan" -gamma '0.85' -white-threshold '70%' -black-threshold '60%' "$tmpconv"
+#convert "$tmpscan" -gamma '0.85' -white-threshold '70%' -black-threshold '60%' "$tmpconv"
+convert "$tmpscan" -gamma '0.5' -level-colors '75%,80%' "$tmpconv"
 unpaper --overwrite "$tmpconv" "$tmpunp"
 gpicview "$tmpunp" >/dev/null 2>&1 &
 convert "$tmpunp" "$1"

@@ -28,12 +28,23 @@
 
 outfile="$1"
 
+if [ -e "$outfile" ]; then
+    echo "Output file $outfile already exists!\n" >&2
+    exit 1
+fi
+
 tmpscan=$(mktemp tmp1scan-XXXXXXXX.pnm)
 tmpconv=$(mktemp tmp2conv-XXXXXXXX.pnm)
 tmpunp=$(mktemp tmp3unp-XXXXXXXX.pnm)
 
-scanimage --resolution 150 -x 210 -y 297 --calibration-cache=yes --mode Gray > "$tmpscan"
-convert "$tmpscan" -gamma '0.5' -white-threshold '80%' -black-threshold '65%' "$tmpconv"
+#scanimage --resolution 150 -x 210 -y 297 --calibration-cache=yes --mode Gray > "$tmpscan"
+scanimage --resolution 150 -x 210 -y 297 --brightness -20% --contrast 20% --calibration-cache=yes --mode Gray > "$tmpscan"
+#scanimage --resolution 150 -x 210 -y 297 --brightness -30% --contrast 40% --calibration-cache=yes --mode Gray > "$tmpscan"
+#convert "$tmpscan" -gamma '0.5' -level-colors '75%,90%' "$tmpconv"
+convert "$tmpscan" -gamma '0.3' -level-colors '80%,90%' -adaptive-sharpen 10x5 "$tmpconv"
+#convert "$tmpscan" -gamma '0.5' -white-threshold '80%' -black-threshold '65%' "$tmpconv"
 unpaper --overwrite "$tmpconv" "$tmpunp"
 gpicview "$tmpunp" >/dev/null 2>&1 &
-convert "$tmpunp" "$1"
+convert "$tmpunp" -alpha off -compress zip "$1"
+# This gives *really* good compression
+#convert "$tmpunp" -alpha off -monochrome -compress fax "$1"
