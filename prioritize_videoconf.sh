@@ -27,6 +27,8 @@ user=jitsi
 
 pids=$(pgrep --uid "$user" pulseaudio || true
        pgrep --uid "$user" 'Web Content' || true
+       pgrep --uid "$user" 'Isolated Web Co' || true
+       pgrep --uid "$user" 'Socket Process' || true
        pgrep --uid "$user" firefox-bin || true
        pgrep --uid "$user" 'Privileged Con' || true
        pgrep --uid "$user" chromium || true
