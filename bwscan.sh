@@ -24,8 +24,6 @@
 #  THE SOFTWARE.
 #
 
-
-
 outfile="$1"
 
 if [ -e "$outfile" ]; then

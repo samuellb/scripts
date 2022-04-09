@@ -24,15 +24,21 @@
 #  THE SOFTWARE.
 #
 
-
 outfile="$1"
+
+if [ -e "$outfile" ]; then
+    echo "Output file $outfile already exists!\n" >&2
+    exit 1
+fi
 
 tmpscan=$(mktemp tmp1scan-XXXXXXXX.pnm)
 tmpconv=$(mktemp tmp2conv-XXXXXXXX.pnm)
-tmpunp=$(mktemp tmp3unp-XXXXXXXX.pnm)
 
-scanimage --resolution 300 -x 210 -y 297 --calibration-cache=yes --mode Gray > "$tmpscan"
-convert "$tmpscan" -gamma '0.8' -white-threshold '80%' -black-threshold '65%' "$tmpconv"
-unpaper --overwrite "$tmpconv" "$tmpunp"
-gpicview "$tmpunp" >/dev/null 2>&1 &
-convert -density 300 "$tmpunp" "$1"
+scanimage --resolution 300 -x 210 -y 297 --brightness -20% --contrast 20% --calibration-cache=yes --mode Gray > "$tmpscan"
+convert "$tmpscan" -level '30%,90%,0.7' -adaptive-sharpen 10x5 "$tmpconv"
+# Unpaper removes a bit too much content
+#unpaper --overwrite -s a4 "$tmpconv" "$tmpunp"
+gpicview "$tmpconv" >/dev/null 2>&1 &
+convert "$tmpconv" -alpha off -compress zip -page a4 "$1"
+# This gives *really* good compression
+#convert "$tmpconv" -alpha off -monochrome -compress fax "$1"

@@ -26,14 +26,13 @@
 
 outfile="$1"
 
-tmpscan=$(mktemp tmp1scan-XXXXXXXX.pnm)
-tmpconv=$(mktemp tmp2conv-XXXXXXXX.pnm)
-tmpunp=$(mktemp tmp3unp-XXXXXXXX.pnm)
+if [ -e "$outfile" ]; then
+    echo "Output file $outfile already exists!\n" >&2
+    exit 1
+fi
 
-#scanimage --resolution 300 -x 210 -y 297 --calibration-cache=yes > "$tmpscan"
+tmpscan=$(mktemp tmp1scan-XXXXXXXX.pnm)
+
 scanimage --resolution 300 -x 210 -y 305 --brightness -30 --contrast 30 --calibration-cache=yes > "$tmpscan"
-#convert "$tmpscan" -gamma '0.85' -white-threshold '70%' -black-threshold '60%' "$tmpconv"
-convert "$tmpscan" -gamma '0.5' -level-colors '75%,80%' "$tmpconv"
-unpaper --overwrite "$tmpconv" "$tmpunp"
-gpicview "$tmpunp" >/dev/null 2>&1 &
-convert "$tmpunp" "$1"
+convert "$tmpscan" -level '30%,70%,1.2' -adaptive-sharpen 10x5 -alpha off -compress zip -page a4 "$1"
+evince "$1"
