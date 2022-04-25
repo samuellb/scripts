@@ -60,23 +60,33 @@ set_taskbar_monitor() {
     fi
 }
 
+if [ "x${mode%2}" != "x$mode" ]; then
+    external_prim=
+    internal_prim=--primary
+    side="${mode%2}"
+else
+    external_prim=--primary
+    internal_prim=
+    side="$mode"
+fi
 
 case "$mode" in
-left|right)
+left|left2|right|right2)
     internal_monitor=$(find_internal_monitor) || error 3 "Could not detect any monitors."
     external_monitors=$(list_connected_external_monitors) || error 4 "Could not detect any external monitors."
-    primary=--primary
+    primary=$external_prim
     farthest=$internal_monitor
     args=''
     for output in $external_monitors; do
         echo "Found external output: $output${primary:+, making primary}"
-        args="$args --output $output --auto --$mode-of $farthest $primary"
+        args="$args --output $output --mode 1920x1080 --$side-of $farthest $primary"
         primary=''
         farthest=$output
     done
+    primary=$internal_prim
     xrandr $args
     # FIXME internal monitor could in theory come after
-    if [ "$mode" = left ]; then
+    if [ "$mode" = left ] || [ "$mode" = right2 ]; then
         set_taskbar_monitor 0
     else
         set_taskbar_monitor 1
@@ -107,8 +117,10 @@ Modes:
          is restarted. It will only update the panel called "panel", which
          the default panel is called. Additional panels will not be upated.
   right  Like "left", but puts the external monitors to the right.
+  left2  Like "left", but the external screen is made secondary.
+  right2 Like "right", but the external screen is made secondary.
   off    Switches external monitors
-  help  Shows this help text.
+  help   Shows this help text.
 
 EOF
     ;;
